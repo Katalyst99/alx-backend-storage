@@ -7,4 +7,4 @@ def insert_school(mongo_collection, **kwargs):
     if mongo_collection is None:
         return None
     newDoc = mongo_collection.insert_one(kwargs)
-    return newDoc
+    return newDoc.inserted_id
