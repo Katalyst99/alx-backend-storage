@@ -8,8 +8,8 @@ from functools import wraps
 redIs = redis.Redis()
 
 
-def url_count(method):
-    """A decorator for the get_page function"""
+def url_count(method: Callable) -> Callable:
+    """A decorator takes a single argument and returns a Callable"""
     @wraps(method)
     def wrapper(url):
         redIs.incr(f"count:{url}")
