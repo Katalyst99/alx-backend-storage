@@ -22,7 +22,7 @@ def url_count(method: Callable) -> Callable:
     return wrapper
 
 
-
+@url_count
 def get_page(url: str) -> str:
     """
     Uses the requests module to obtain the HTML content of a particular URL,
