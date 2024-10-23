@@ -4,7 +4,20 @@ The module for how to use redis for basic operations and as a simple cache.
 """
 import redis
 from uuid import uuid4
-from typing import Union
+from typing import Union, Optional, Callable
+from functools import wraps
+
+
+def count_calls(method: Callable) -> Callable:
+    """A decorator that takes a single argument and returns a Callable"""
+    key = method.__qualname__
+
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        """A function decorator when defining a wrapper function."""
+        self._redis.incr(key)
+        return method(self, *args, **kwargs)
+    return wrapper
 
 
 class Cache:
@@ -14,8 +27,33 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()
 
+    @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """Store method that takes a data argument and returns a string."""
         randomKey = str(uuid4())
         self._redis.set(randomKey, data)
         return randomKey
+
+    def get(
+            self,
+            key: str,
+            fn: Optional[Callable] = None,
+            ) -> Union[str, bytes, int, float]:
+        """
+        Method that take a key string argument and,
+        an optional Callable argument named fn
+        """
+        data = self._redis.get(key)
+        if fn:
+            data = fn(data)
+        else:
+            return data
+
+    def get_str(self, key: str) -> str:
+        """Method that will automatically parametrize Cache.get (str)"""
+        data = self._redis.get(key)
+        return data.decode('utf-8')
+
+    def get_int(self, key: str) -> int:
+        """Method that will automatically parametrize Cache.get (int)"""
+        return self.get(key, lambda i: int(i))
