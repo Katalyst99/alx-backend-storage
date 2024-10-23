@@ -15,7 +15,9 @@ def url_count(method: Callable) -> Callable:
         cachedOutput = redIs.get(f"cached:{url}")
         if cachedOutput:
             return cachedOutput.decode('utf-8')
+
         output = method(url)
+
         redIs.incr(f"count:{url}")
         redIs.setex(f'cached:{url}', 10, output)
         return output
