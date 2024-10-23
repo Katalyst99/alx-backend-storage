@@ -12,11 +12,12 @@ def url_count(method: Callable) -> Callable:
     """A decorator takes a single argument and returns a Callable"""
     @wraps(method)
     def wrapper(url):
-        redIs.incr(f"count:{url}")
         cachedOutput = redIs.get(f"cached:{url}")
         if cachedOutput:
             return cachedOutput.decode('utf-8')
         output = method(url)
+        redIs.incr(f"count:{url}")
+        redIs.set(f"count:{url}", 0)
         redIs.setex(f'cachedOutput:{url}', 10, output)
         return output
     return wrapper
