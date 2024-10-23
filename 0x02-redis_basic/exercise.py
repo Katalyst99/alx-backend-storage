@@ -20,6 +20,20 @@ def count_calls(method: Callable) -> Callable:
     return wrapper
 
 
+def call_history(method: Callable) -> Callable:
+    """A decorator that takes a single argument and returns a Callable"""
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        """A function decorator when defining a wrapper function."""
+        inputKey = f"{method.__qualname__}:inputs"
+        self._redis.rpush(inputKey, str(args))
+        outputKey = f"{method.__qualname__}:outputs"
+        output = method(self, *args, **kwargs)
+        self._redis.rpush(outputKey, output)
+        return output
+    return wrapper
+
+
 class Cache:
     """The class Cache"""
     def __init__(self):
@@ -27,6 +41,7 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()
 
+    @call_history
     @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """Store method that takes a data argument and returns a string."""
